@@ -114,12 +114,12 @@ class Coach():
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
 
+            self.nnet.train(trainExamples)
             log.info('PITTING AGAINST PREVIOUS VERSION')
 
             if self.useMCTS:
                 pmcts = MCTS(self.game, self.pnet, self.args)
 
-                self.nnet.train(trainExamples)
                 nmcts = MCTS(self.game, self.nnet, self.args)
 
                 arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
