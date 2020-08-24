@@ -142,3 +142,55 @@ class InvisibleTicTacToeGame(TicTacToeGame):
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
         return player*board.visible_pieces[player]
+
+    @staticmethod
+    def display(board):
+        n = board.pieces.shape[0]
+        boards = [board.pieces, board.visible_pieces[1], board.visible_pieces[-1]]
+
+        # TODO: Make the thing print the true board and visible board separately
+        print("|  Board  ", end="")
+        extra_spaces = "  " * (n-3)
+        print(extra_spaces, end="")
+        print("| Player 1 ", end="")
+        print(extra_spaces, end="")
+        print("| Player -1 ", end="")
+        print(extra_spaces, end="")
+        print("|")
+
+
+        for _ in range(3):
+            print("   ", end="")
+            for y in range(n):
+                print (y, "", end="")
+            print(" ", end="")
+        print("")
+
+        for _ in range(3):
+            print("  ", end="")
+            print("--" * (n + 1), end="")
+            print(" ", end="")
+        print("")
+
+        for y in range(n):
+            for i in range(3):
+                print(y, "|", end="")    # print the row #
+                for x in range(n):
+                    piece = boards[i][y][x]    # get the piece to print
+                    if piece == -1: print("X ", end="")
+                    elif piece == 1: print("O ", end="")
+                    else:
+                        if x==n:
+                            print("-", end="")
+                        else:
+                            print("- ", end="")
+                if i == 2:
+                    print("|")
+                else:
+                    print("| ", end="")
+
+        for _ in range(3):
+            print("  ", end="")
+            print("--" * (n + 1), end="")
+            print(" ", end="")
+        print("")
