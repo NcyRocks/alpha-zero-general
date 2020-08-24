@@ -2,7 +2,7 @@ from __future__ import print_function
 import sys
 sys.path.append('..')
 from Game import Game
-from .TicTacToeLogic import Board
+from .TicTacToeLogic import *
 import numpy as np
 
 """
@@ -118,3 +118,14 @@ class TicTacToeGame(Game):
         for _ in range(n):
             print ("-", end="-")
         print("--")
+
+
+class InvisibleTicTacToeGame(TicTacToeGame):
+
+    def getInitBoard(self):
+        return InvisibleBoard(self.n)
+
+    def getCanonicalForm(self, board, player):
+        # return state if player==1, else return -state if player==-1
+        return player*board.visible_pieces[player]
+        
