@@ -43,8 +43,22 @@ class TicTacToeGame(Game):
 
     def getValidMoves(self, board, player):
         # return a fixed size binary vector
+
+        #Can receive an array or a board as input, due to compatibility reasons
+        # TODO: Find a better solution
         valids = [0]*self.getActionSize()
-        legalMoves =  board.get_legal_moves(player)
+        try:
+            legalMoves = board.get_legal_moves(player)
+        except AttributeError:
+            moves = set()  # stores the legal moves.
+
+            # Get all the empty squares (color==0)
+            for y in range(self.n):
+                for x in range(self.n):
+                    if board[x][y]==0:
+                        newmove = (x,y)
+                        moves.add(newmove)
+            legalMoves = list(moves)
         if len(legalMoves)==0:
             valids[-1]=1
             return np.array(valids)
@@ -77,7 +91,7 @@ class TicTacToeGame(Game):
 
         for i in range(1, 5):
             for j in [True, False]:
-                newB = np.rot90(board.pieces, i)
+                newB = np.rot90(board, i)
                 newPi = np.rot90(pi_board, i)
                 if j:
                     newB = np.fliplr(newB)
@@ -87,7 +101,7 @@ class TicTacToeGame(Game):
 
     def stringRepresentation(self, board):
         # 8x8 numpy array (canonical board)
-        return board.pieces.tostring()
+        return board.tostring()
 
     @staticmethod
     def display(board):
@@ -128,4 +142,3 @@ class InvisibleTicTacToeGame(TicTacToeGame):
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
         return player*board.visible_pieces[player]
-        

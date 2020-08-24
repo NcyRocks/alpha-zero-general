@@ -111,10 +111,11 @@ class Board:
         (x,y) = move
 
         # Add the piece to the empty square.
-        assert self[x][y] == 0
-        self[x][y] = color
+        if self[x][y] == 0:
+            self[x][y] = color
+            return True
 
-        return self[x][y] == 0
+        return False
 
 
 class InvisibleBoard(Board):
@@ -133,9 +134,11 @@ class InvisibleBoard(Board):
 
     def execute_move(self, move, color):
         move_is_valid = super().execute_move(move, color)
+        (x, y) = move
         if not move_is_valid:
-            (x, y) = move
             self.visible_pieces[color][x][y] = -color
+        else:
+            self.visible_pieces[color][x][y] = color
         return move_is_valid
 
     def get_legal_moves(self, color):

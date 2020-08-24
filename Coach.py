@@ -125,8 +125,9 @@ class Coach():
                 arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
                             lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
             else:
-                arena = Arena(lambda x: np.argmax(self.nnet.predict(x)[0]),
-                            lambda x: np.argmax(self.pnet.predict(x)[0]), self.game)
+                # TODO: Really hacky solution, zeroing out invalid moves should happen somehow else
+                arena = Arena(lambda x: np.argmax(self.nnet.predict(x)[0] * self.game.getValidMoves(x, 1)),
+                            lambda x: np.argmax(self.pnet.predict(x)[0] * self.game.getValidMoves(x, -1)), self.game, self.game.display)
 
 
 
