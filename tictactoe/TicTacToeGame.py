@@ -19,9 +19,8 @@ class TicTacToeGame(Game):
         self.n = n
 
     def getInitBoard(self):
-        # return initial board (numpy board)
-        b = Board(self.n)
-        return np.array(b.pieces)
+        # return initial board (NOT numpy board, but Board itself)
+        return Board(self.n)
 
     def getBoardSize(self):
         # (a,b) tuple
@@ -33,21 +32,19 @@ class TicTacToeGame(Game):
 
     def getNextState(self, board, player, action):
         # if player takes action on board, return next (board,player)
-        # action must be a valid move
+        # action need not be a valid move - invalid moves will prompt another turn
         if action == self.n*self.n:
             return (board, -player)
-        b = Board(self.n)
-        b.pieces = np.copy(board)
         move = (int(action/self.n), action%self.n)
-        b.execute_move(move, player)
-        return (b.pieces, -player)
+        if board.execute_move(move, player):
+            return (board, -player)
+        else:
+            return (board, player)
 
     def getValidMoves(self, board, player):
         # return a fixed size binary vector
         valids = [0]*self.getActionSize()
-        b = Board(self.n)
-        b.pieces = np.copy(board)
-        legalMoves =  b.get_legal_moves(player)
+        legalMoves =  board.get_legal_moves(player)
         if len(legalMoves)==0:
             valids[-1]=1
             return np.array(valids)
@@ -58,21 +55,19 @@ class TicTacToeGame(Game):
     def getGameEnded(self, board, player):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
-        b = Board(self.n)
-        b.pieces = np.copy(board)
 
-        if b.is_win(player):
+        if board.is_win(player):
             return 1
-        if b.is_win(-player):
+        if board.is_win(-player):
             return -1
-        if b.has_legal_moves():
+        if board.has_legal_moves():
             return 0
         # draw has a very little value 
         return 1e-4
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
-        return player*board
+        return player*board.pieces
 
     def getSymmetries(self, board, pi):
         # mirror, rotational
@@ -82,7 +77,7 @@ class TicTacToeGame(Game):
 
         for i in range(1, 5):
             for j in [True, False]:
-                newB = np.rot90(board, i)
+                newB = np.rot90(board.pieces, i)
                 newPi = np.rot90(pi_board, i)
                 if j:
                     newB = np.fliplr(newB)
@@ -92,11 +87,11 @@ class TicTacToeGame(Game):
 
     def stringRepresentation(self, board):
         # 8x8 numpy array (canonical board)
-        return board.tostring()
+        return board.pieces.tostring()
 
     @staticmethod
     def display(board):
-        n = board.shape[0]
+        n = board.pieces.shape[0]
 
         print("   ", end="")
         for y in range(n):
@@ -109,7 +104,7 @@ class TicTacToeGame(Game):
         for y in range(n):
             print(y, "|",end="")    # print the row #
             for x in range(n):
-                piece = board[y][x]    # get the piece to print
+                piece = board.pieces[y][x]    # get the piece to print
                 if piece == -1: print("X ",end="")
                 elif piece == 1: print("O ",end="")
                 else:
