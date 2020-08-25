@@ -121,11 +121,10 @@ class Board:
         (x, y) = move
 
         # Add the piece to the empty square.
-        if self[x][y] == 0:
-            self[x][y] = color
-            return True
-
-        return False
+        assert self[x][y] == 0
+        self[x][y] = color
+            
+        return True
 
 
 class InvisibleBoard(Board):
@@ -136,20 +135,17 @@ class InvisibleBoard(Board):
 
     def __init__(self, n=3):
         super().__init__(n=n)
-        self.visible_pieces = {player: [None] * self.n for player in (1, -1)}
-        for player in (1, -1):
-            for i in range(self.n):
-                self.visible_pieces[player][i] = [0] * self.n
-            self.visible_pieces[player] = np.array(self.visible_pieces[player])
+        self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
 
     def execute_move(self, move, color):
-        move_is_valid = super().execute_move(move, color)
         (x, y) = move
-        if not move_is_valid:
-            self.visible_pieces[color][x][y] = -color
-        else:
+        try:
+            super().execute_move(move, color)
             self.visible_pieces[color][x][y] = color
-        return move_is_valid
+            return True
+        except AssertionError:
+            self.visible_pieces[color][x][y] = -color
+            return False
 
     def get_legal_moves(self, color):
         """Returns all the seemingly legal moves for the given color.
