@@ -5,10 +5,10 @@ DEFAULT_HEIGHT = 6
 DEFAULT_WIDTH = 7
 DEFAULT_WIN_LENGTH = 4
 
-WinState = namedtuple('WinState', 'is_ended winner')
+WinState = namedtuple("WinState", "is_ended winner")
 
 
-class Board():
+class Board:
     """
     Connect4 Board.
     """
@@ -27,14 +27,15 @@ class Board():
 
     def add_stone(self, column, player):
         "Create copy of board containing new stone."
-        available_idx, = np.where(self.np_pieces[:, column] == 0)
+        (available_idx,) = np.where(self.np_pieces[:, column] == 0)
         if len(available_idx) == 0:
             raise ValueError("Can't play column %s on board %s" % (column, self))
 
         self.np_pieces[available_idx[-1]][column] = player
+        return True
 
-    def get_valid_moves(self):
-        "Any zero value in top row in a valid move"
+    def get_valid_moves(self, player):
+        "Any zero value in top row is a valid move"
         return self.np_pieces[0] == 0
 
     def get_win_state(self):
@@ -79,3 +80,30 @@ class Board():
 
     def __str__(self):
         return str(self.np_pieces)
+
+
+class InvisibleBoard(Board):
+    """
+    Board for Invisible Connect 4.
+    Players can see their own pieces and any pieces of their opponent's underneath theirs.
+    """
+
+    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+        super().__init__(
+            height=height, width=width, win_length=win_length, np_pieces=np_pieces
+        )
+        self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+
+    def add_stone(self, column, player):
+        try:
+            super().add_stone(column, player)
+            self.visible_pieces[player][:, column] = self.np_pieces[:, column]
+            return True
+        except ValueError:
+            self.visible_pieces[player][:, column] = self.np_pieces[:, column]
+            return False
+
+    def get_valid_moves(self, player):
+        "Any zero value in visible top row may be a valid move"
+        return self.visible_pieces[player][0] == 0
+
