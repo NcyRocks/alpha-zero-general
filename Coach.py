@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from Arena import Arena
 from MCTS import MCTS
+from Imp_MCTS import Imp_MCTS
 
 log = logging.getLogger(__name__)
 
@@ -20,13 +21,13 @@ class Coach():
     in Game and NeuralNet. args are specified in main.py.
     """
 
-    def __init__(self, game, nnet, args, useMCTS=False):
+    def __init__(self, game, nnet, args, useMCTS=True):
         self.game = game
         self.nnet = nnet
         self.pnet = self.nnet.__class__(self.game)  # the competitor network
         self.args = args
         self.useMCTS = useMCTS
-        self.mcts = MCTS(self.game, self.nnet, self.args)
+        self.mcts = {1: Imp_MCTS(self.game, self.nnet, 1, self.args), -1: Imp_MCTS(self.game, self.nnet, -1, self.args)}
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
 
@@ -57,7 +58,7 @@ class Coach():
             temp = int(episodeStep < self.args.tempThreshold)
 
             if self.useMCTS:
-                pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
+                pi = self.mcts[self.curPlayer].getActionProb(canonicalBoard, temp=temp)
             else:
                 pi = self.nnet.predict(canonicalBoard)[0]
 
@@ -90,7 +91,7 @@ class Coach():
                 iterationTrainExamples = deque([], maxlen=self.args.maxlenOfQueue)
 
                 for _ in tqdm(range(self.args.numEps), desc="Self Play"):
-                    self.mcts = MCTS(self.game, self.nnet, self.args)  # reset search tree
+                    self.mcts = {1: Imp_MCTS(self.game, self.nnet, 1, self.args), -1: Imp_MCTS(self.game, self.nnet, -1, self.args)}  # reset search tree
                     iterationTrainExamples += self.executeEpisode()
 
                 # save the iteration examples to the history 
@@ -118,9 +119,9 @@ class Coach():
             log.info('PITTING AGAINST PREVIOUS VERSION')
 
             if self.useMCTS:
-                pmcts = MCTS(self.game, self.pnet, self.args)
+                pmcts = MCTS(self.game, self.pnet, 1, self.args)
 
-                nmcts = MCTS(self.game, self.nnet, self.args)
+                nmcts = MCTS(self.game, self.nnet, -1, self.args)
 
                 arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
                             lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)

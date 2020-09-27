@@ -30,14 +30,15 @@ class Board:
         (0, 1),
     ]
 
-    def __init__(self, n=3):
+    def __init__(self, n=3, pieces=None):
         "Set up initial board configuration."
 
         self.n = n
         # Create the empty board array.
-        pieces = [None] * self.n
-        for i in range(self.n):
-            pieces[i] = [0] * self.n
+        if pieces is None:
+            pieces = [None] * self.n
+            for i in range(self.n):
+                pieces[i] = [0] * self.n
         self.pieces = np.array(pieces)
 
     # add [][] indexer syntax to the Board
@@ -135,7 +136,7 @@ class InvisibleBoard(Board):
 
     def __init__(self, n=3):
         super().__init__(n=n)
-        self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+        self.visible_pieces = {player: np.copy(self.pieces) for player in [1, -1]}
 
     def execute_move(self, move, color):
         (x, y) = move

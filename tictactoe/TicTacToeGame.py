@@ -33,7 +33,7 @@ class TicTacToeGame(Game):
         return self.n * self.n + 1
 
     def getNextState(self, board, player, action):
-        # if player takes action on board, return next (board,player)
+        # if player takes action on board, return next (board, player)
         # action need not be a valid move - invalid moves will prompt another turn
         if action == self.n * self.n:
             return (board, -player)
@@ -72,14 +72,19 @@ class TicTacToeGame(Game):
         # return 0 if not ended, 1 if player 1 won, -1 if player 1 lost
         # player = 1
 
-        if board.is_win(player):
-            return 1
-        if board.is_win(-player):
-            return -1
-        if board.has_legal_moves():
-            return 0
-        # draw has a very little value
-        return 1e-4
+        # Yet another crappy workaround - bear with
+        try:
+            if board.is_win(player):
+                return 1
+            if board.is_win(-player):
+                return -1
+            if board.has_legal_moves():
+                return 0
+            # draw has a very little value
+            return 1e-4
+        except AttributeError:
+            board = Board(self.n, board)
+            return self.getGameEnded(board, player)
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
@@ -150,6 +155,32 @@ class InvisibleTicTacToeGame(TicTacToeGame):
     def getCanonicalForm(self, board, player):
         # return visible state if player==1, else return -state if player==-1
         return board.visible_pieces[player] * player
+
+    def getPossibleOutcomes(self, board, player, action):
+        # Board should only be a np array, not an actual board, for I-didn't-write-this-I'm-just-tying-things-together-that-shouldn't-go-together reasons
+        empties = 0
+        other_pieces = 0
+        my_pieces = 0
+        for y in range(self.n):
+            for x in range(self.n):
+                if board[x][y] == 0:
+                    empties += 1
+                if board[x][y] == -player:
+                    other_pieces += 1
+                if board[x][y] == player:
+                    my_pieces += 1
+        hidden_pieces = my_pieces - other_pieces
+        if player == -1:
+            hidden_pieces += 1
+        move = (int(action / self.n), action % self.n)
+        (x, y) = move
+        if_valid = np.copy(board)
+        if_valid[x][y] = player
+        if_invalid = np.copy(board)
+        if_invalid[x][y] = -player
+        valid_odds = (empties - hidden_pieces) / empties
+        invalid_odds = hidden_pieces / empties
+        return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
 
     @staticmethod
     def display(board):
