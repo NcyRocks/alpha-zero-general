@@ -71,8 +71,13 @@ class Connect4Game(Game):
         print(board)
         print(" -----------------------")
 
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return Board(self.height, self.width, self.win_length, canonicalBoard)
+
 
 class InvisibleConnectFourGame(Connect4Game):
+    
     def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
         super().__init__(height, width, win_length, np_pieces)
 
@@ -81,10 +86,25 @@ class InvisibleConnectFourGame(Connect4Game):
 
     def getNextState(self, board, player, action):
         if board.add_stone(action, player):
-            return board, -player
+            pieces_1 = 0
+            pieces_2 = 0
+            for y in range(self.height):
+                for x in range(self.width):
+                    if board[x][y] == 1:
+                        pieces_1 += 1
+                    if board[x][y] == -1:
+                        pieces_2 += 1
+            if pieces_1 > pieces_2:
+                return (board, -1)
+            else:
+                return (board, 1)
         else:
-            return board, player
+            return (board, player)
 
     def getCanonicalForm(self, board, player):
         # Flip player from 1 to -1
         return board.visible_pieces[player] * player
+
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return InvisibleBoard(self.height, self.width, self.win_length, canonicalBoard)

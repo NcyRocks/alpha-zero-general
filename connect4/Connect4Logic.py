@@ -93,6 +93,10 @@ class InvisibleBoard(Board):
             height=height, width=width, win_length=win_length, np_pieces=np_pieces
         )
         self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+        for x in range(height):
+            for y in range(width):
+                if self.visible_pieces[-1][x][y] == 1:
+                    self.visible_pieces[-1][x][y] = 0
 
     def add_stone(self, column, player):
         try:
