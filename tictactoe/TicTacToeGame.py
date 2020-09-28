@@ -38,6 +38,7 @@ class TicTacToeGame(Game):
         if action == self.n * self.n:
             return (board, -player)
         move = (int(action / self.n), action % self.n)
+        # TODO: This 'if' statement is not necessary now
         if board.execute_move(move, player):
             return (board, -player)
         else:
@@ -185,15 +186,31 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         #     invalid_odds = 0
         return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
 
+    def getModelBoard(self, canonicalBoard):
+        return InvisibleBoard(self.n, canonicalBoard)
+
     def getNextState(self, board, player, action):
-        pieces_n = 0
-        pieces_p = 0
+        # if player takes action on board, return next (board, player)
+        # action need not be a valid move - invalid moves will prompt another turn
+
+        # TODO: Instead of checking valid moves, check whose next turn it is based on numbers of steps
+        if action == self.n * self.n:
+            return (board, -player)
+        move = (int(action / self.n), action % self.n)
+        board.execute_move(move, player)
+        # Weird solution that'll probably work
+        pieces_1 = 0
+        pieces_2 = 0
         for y in range(self.n):
             for x in range(self.n):
-                if board[x][y] == -player:
-                    pieces_n += 1
-                if board[x][y] == player:
-                    pieces_p += 1
+                if board[x][y] == 1:
+                    pieces_1 += 1
+                if board[x][y] == -1:
+                    pieces_2 += 1
+        if pieces_1 > pieces_2:
+            return (board, -1)
+        else:
+            return (board, 1)
 
     @staticmethod
     def display(board):

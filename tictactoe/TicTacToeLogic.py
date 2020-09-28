@@ -134,9 +134,13 @@ class InvisibleBoard(Board):
     Assumes two players.
     """
 
-    def __init__(self, n=3):
-        super().__init__(n=n)
+    def __init__(self, n=3, pieces=None):
+        super().__init__(n=n, pieces=pieces)
         self.visible_pieces = {player: np.copy(self.pieces) for player in [1, -1]}
+        for x in range(n):
+            for y in range(n):
+                if self.visible_pieces[-1][x][y] == -1:
+                    self.visible_pieces[-1][x][y] = 0
 
     def execute_move(self, move, color):
         (x, y) = move

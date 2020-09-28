@@ -1,4 +1,5 @@
 import numpy as np
+from random import choices
 
 """
 Random and Human-ineracting players for the game of TicTacToe.
@@ -45,3 +46,31 @@ class HumanTicTacToePlayer():
                 print('Invalid')
 
         return a
+
+class NaiveNNetPlayer():
+    def __init__(self, game, nnet, number):
+        self.game = game
+        self.nnet = nnet
+        self.number = number
+
+    def moves(self, board):
+        return self.nnet.predict(board)[0] * self.game.getValidMoves(board, self.number)
+
+    def play(self, board):
+        return self.play_random(board)
+
+    def play_max(self, board):
+        return np.argmax(self.moves(board))
+
+    def play_random(self, board):
+        moves = self.moves(board)
+        total = sum(moves)
+        normalised = [move/total for move in moves]
+        choice = choices(range(self.game.getActionSize()), k=1, weights=normalised)
+        return choice[0]
+
+    def set_num(self, number):
+        self.number = number
+
+    def __call__(self, board):
+        return self.play(board)

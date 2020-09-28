@@ -11,6 +11,7 @@ from tqdm import tqdm
 from Arena import Arena
 from MCTS import MCTS
 from Imp_MCTS import Imp_MCTS
+from tictactoe.TicTacToePlayers import NaiveNNetPlayer
 
 log = logging.getLogger(__name__)
 
@@ -123,12 +124,11 @@ class Coach():
 
                 nmcts = Imp_MCTS(self.game, self.nnet, -1, self.args)
 
-                arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                            lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game, self.game.display)
+                arena = Arena(pmcts, nmcts, self.game, self.game.display)
             else:
-                # TODO: Really hacky solution, zeroing out invalid moves should happen somehow else
-                arena = Arena(lambda x: np.argmax(self.pnet.predict(x)[0] * self.game.getValidMoves(x, 1)),
-                            lambda x: np.argmax(self.nnet.predict(x)[0] * self.game.getValidMoves(x, -1)), self.game, self.game.display)
+                # TODO: Really hacky solution, need to change to other games manually
+                arena = Arena(NaiveNNetPlayer(self.game, self.pnet, 1),
+                            NaiveNNetPlayer(self.game, self.nnet, -1), self.game, self.game.display)
 
 
 

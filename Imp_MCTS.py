@@ -29,6 +29,12 @@ class Imp_MCTS():
         self.Vs = {}  # stores game.getValidMoves for board s
         self.player = player
 
+    def set_num(self, number):
+        self.player = number
+
+    def __call__(self, canonicalBoard, temp=0):
+        return np.argmax(self.getActionProb(canonicalBoard, temp))
+
     def getActionProb(self, canonicalBoard, temp=1):
         """
         This function performs numMCTSSims simulations of MCTS starting from
@@ -39,7 +45,8 @@ class Imp_MCTS():
                    proportional to Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.args.numMCTSSims):
-            self.search(canonicalBoard)
+            board = self.game.getModelBoard(canonicalBoard)
+            self.search(board, 1, -1)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
@@ -56,7 +63,8 @@ class Imp_MCTS():
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search(self, canonicalBoard):
+    def search(self, board, player, prev_player):
+        # TODO: Update notes
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -68,24 +76,28 @@ class Imp_MCTS():
         outcome is propagated up the search path. The values of Ns, Nsa, Qsa are
         updated.
 
-        NOTE: the return values are NOT negative, since this search method does not simulate the other player's moves.
+        NOTE: the return values are the negative of the value of the current
+        state. This is done since v is in [-1,1] and if v is the value of a
+        state for the current player, then its value is -v for the other player.
 
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
+        canonicalBoard = self.game.getCanonicalForm(board, player)
+        multiplier = player * prev_player #-1 if different, 1 if same
 
         s = self.game.stringRepresentation(canonicalBoard)
 
         if s not in self.Es:
-            self.Es[s] = self.game.getGameEnded(canonicalBoard, self.player)
+            self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
         if self.Es[s] != 0:
             # terminal node
-            return self.Es[s]
+            return self.Es[s] * multiplier
 
         if s not in self.Ps:
             # leaf node
             self.Ps[s], v = self.nnet.predict(canonicalBoard)
-            valids = self.game.getValidMoves(canonicalBoard, self.player)
+            valids = self.game.getValidMoves(canonicalBoard, 1)
             self.Ps[s] = self.Ps[s] * valids  # masking invalid moves
             sum_Ps_s = np.sum(self.Ps[s])
             if sum_Ps_s > 0:
@@ -101,14 +113,13 @@ class Imp_MCTS():
 
             self.Vs[s] = valids
             self.Ns[s] = 0
-            return v
+            return v * multiplier
 
         valids = self.Vs[s]
         cur_best = -float('inf')
         best_act = -1
 
         # pick the action with the highest upper confidence bound
-        # TODO: This may not make sense any more. Change to take into account that (s, a) doesn't describe one outcome anymore
         for a in range(self.game.getActionSize()):
             if valids[a]:
                 if (s, a) in self.Qsa:
@@ -122,11 +133,10 @@ class Imp_MCTS():
                     best_act = a
 
         a = best_act
-        next_states_probs = self.game.getPossibleOutcomes(canonicalBoard, self.player, a)
-        # next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
+        next_s, next_player = self.game.getNextState(board, player, a)
         # next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = sum([self.search(next_s)*prob for next_s, prob in next_states_probs])
+        v = self.search(next_s, next_player, player)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
@@ -137,4 +147,4 @@ class Imp_MCTS():
             self.Nsa[(s, a)] = 1
 
         self.Ns[s] += 1
-        return v
+        return v * multiplier
