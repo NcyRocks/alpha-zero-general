@@ -143,6 +143,10 @@ class TicTacToeGame(Game):
             print("-", end="-")
         print("--")
 
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return Board(self.n, canonicalBoard)
+
 
 class InvisibleTicTacToeGame(TicTacToeGame):
     """Implementation of Invisible TicTacToe.
@@ -187,6 +191,7 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
 
     def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
         return InvisibleBoard(self.n, canonicalBoard)
 
     def getNextState(self, board, player, action):

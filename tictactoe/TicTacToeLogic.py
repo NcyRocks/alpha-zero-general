@@ -139,7 +139,7 @@ class InvisibleBoard(Board):
         self.visible_pieces = {player: np.copy(self.pieces) for player in [1, -1]}
         for x in range(n):
             for y in range(n):
-                if self.visible_pieces[-1][x][y] == -1:
+                if self.visible_pieces[-1][x][y] == 1:
                     self.visible_pieces[-1][x][y] = 0
 
     def execute_move(self, move, color):
