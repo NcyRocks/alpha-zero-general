@@ -126,7 +126,7 @@ class Imp_MCTS():
         # next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
         # next_s = self.game.getCanonicalForm(next_s, next_player)
 
-        v = sum([self.search(next_s) for next_s, prob in next_states_probs])
+        v = sum([self.search(next_s)/prob for next_s, prob in next_states_probs])
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
