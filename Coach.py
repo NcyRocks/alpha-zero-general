@@ -124,7 +124,7 @@ class Coach():
                 nmcts = Imp_MCTS(self.game, self.nnet, -1, self.args)
 
                 arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                            lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
+                            lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game, self.game.display)
             else:
                 # TODO: Really hacky solution, zeroing out invalid moves should happen somehow else
                 arena = Arena(lambda x: np.argmax(self.nnet.predict(x)[0] * self.game.getValidMoves(x, 1)),
