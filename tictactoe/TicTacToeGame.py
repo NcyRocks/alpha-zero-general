@@ -180,7 +180,20 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         if_invalid[x][y] = -player
         valid_odds = (empties - hidden_pieces) / empties
         invalid_odds = hidden_pieces / empties
+        # if self.getGameEnded(if_invalid):
+        #     valid_odds = 1
+        #     invalid_odds = 0
         return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
+
+    def getNextState(self, board, player, action):
+        pieces_n = 0
+        pieces_p = 0
+        for y in range(self.n):
+            for x in range(self.n):
+                if board[x][y] == -player:
+                    pieces_n += 1
+                if board[x][y] == player:
+                    pieces_p += 1
 
     @staticmethod
     def display(board):
