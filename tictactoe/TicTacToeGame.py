@@ -202,20 +202,22 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         if action == self.n * self.n:
             return (board, -player)
         move = (int(action / self.n), action % self.n)
-        board.execute_move(move, player)
+        if board.execute_move(move, player):
         # Weird solution that'll probably work
-        pieces_1 = 0
-        pieces_2 = 0
-        for y in range(self.n):
-            for x in range(self.n):
-                if board[x][y] == 1:
-                    pieces_1 += 1
-                if board[x][y] == -1:
-                    pieces_2 += 1
-        if pieces_1 > pieces_2:
-            return (board, -1)
+            pieces_1 = 0
+            pieces_2 = 0
+            for y in range(self.n):
+                for x in range(self.n):
+                    if board[x][y] == 1:
+                        pieces_1 += 1
+                    if board[x][y] == -1:
+                        pieces_2 += 1
+            if pieces_1 > pieces_2:
+                return (board, -1)
+            else:
+                return (board, 1)
         else:
-            return (board, 1)
+            return (board, player)
 
     @staticmethod
     def display(board):
