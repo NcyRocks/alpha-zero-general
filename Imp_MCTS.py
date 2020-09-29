@@ -8,9 +8,7 @@ EPS = 1e-8
 log = logging.getLogger(__name__)
 
 
-# Kind of hacky version of MCTS for imperfect info games that needs to be standardised and made to work with perfect info too?
-# Most importantly, the probabilities need to come from the NN, not the game - they're being treated as random, and they're just not
-# Maybe another NN so we can use the default move-predicting and board-valuing one against a perfect info NN?
+# Kind of hacky version of MCTS for imperfect info games that needs to be standardised
 class Imp_MCTS():
     """
     This class handles the MCTS tree for imperfect info games, or at least I bloody well hope so.
@@ -44,9 +42,13 @@ class Imp_MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
-        for i in range(self.args.numMCTSSims):
+        for i in range(2):
             board = self.game.getModelBoard(canonicalBoard)
-            self.search(board, 1, -1)
+            self.search(board, 1, -1) # Ensure the current player's moves are explored at least once??
+        for i in range(self.args.numMCTSSims-2):
+            board = self.game.getModelBoard(canonicalBoard)
+            next_player = self.game.getNextPlayer(board) # This isn't going to be valid for all games...
+            self.search(board, next_player, -next_player)
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]

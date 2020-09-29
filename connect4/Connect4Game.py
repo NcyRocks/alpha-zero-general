@@ -75,6 +75,20 @@ class Connect4Game(Game):
         # TODO: Rename
         return Board(self.height, self.width, self.win_length, canonicalBoard)
 
+    def getNextPlayer(self, board):
+        pieces_1 = 0
+        pieces_2 = 0
+        for y in range(self.height):
+            for x in range(self.width):
+                if board[x][y] == 1:
+                    pieces_1 += 1
+                if board[x][y] == -1:
+                    pieces_2 += 1
+        if pieces_1 > pieces_2:
+            return -1
+        else:
+            return 1
+
 
 class InvisibleConnectFourGame(Connect4Game):
     
@@ -86,18 +100,9 @@ class InvisibleConnectFourGame(Connect4Game):
 
     def getNextState(self, board, player, action):
         if board.add_stone(action, player):
-            pieces_1 = 0
-            pieces_2 = 0
-            for y in range(self.height):
-                for x in range(self.width):
-                    if board[x][y] == 1:
-                        pieces_1 += 1
-                    if board[x][y] == -1:
-                        pieces_2 += 1
-            if pieces_1 > pieces_2:
-                return (board, -1)
-            else:
-                return (board, 1)
+        # Weird solution that'll probably work
+            next_player = self.getNextPlayer(board)
+            return (board, next_player)
         else:
             return (board, player)
 

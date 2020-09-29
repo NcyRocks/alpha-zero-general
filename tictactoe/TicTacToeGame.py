@@ -147,6 +147,20 @@ class TicTacToeGame(Game):
         # TODO: Rename
         return Board(self.n, canonicalBoard)
 
+    def getNextPlayer(self, board):
+        pieces_1 = 0
+        pieces_2 = 0
+        for y in range(self.n):
+            for x in range(self.n):
+                if board[x][y] == 1:
+                    pieces_1 += 1
+                if board[x][y] == -1:
+                    pieces_2 += 1
+        if pieces_1 > pieces_2:
+            return -1
+        else:
+            return 1
+
 
 class InvisibleTicTacToeGame(TicTacToeGame):
     """Implementation of Invisible TicTacToe.
@@ -204,18 +218,8 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         move = (int(action / self.n), action % self.n)
         if board.execute_move(move, player):
         # Weird solution that'll probably work
-            pieces_1 = 0
-            pieces_2 = 0
-            for y in range(self.n):
-                for x in range(self.n):
-                    if board[x][y] == 1:
-                        pieces_1 += 1
-                    if board[x][y] == -1:
-                        pieces_2 += 1
-            if pieces_1 > pieces_2:
-                return (board, -1)
-            else:
-                return (board, 1)
+            next_player = self.getNextPlayer(board)
+            return (board, next_player)
         else:
             return (board, player)
 
