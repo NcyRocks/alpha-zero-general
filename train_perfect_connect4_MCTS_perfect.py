@@ -2,8 +2,8 @@ import logging
 
 import coloredlogs
 
-from Coach import Coach
-from connect4.Connect4Game import InvisibleConnectFourGame as Game
+from Coach_mcts import Coach
+from connect4.Connect4Game import Connect4Game as Game
 from connect4.tensorflow.NNet import NNetWrapper as nn
 #from tictactoe.TicTacToeGame import InvisibleTicTacToeGame as Game
 #from tictactoe.keras.NNet import NNetWrapper as nn
@@ -15,7 +15,7 @@ log = logging.getLogger(__name__)
 coloredlogs.install(level='INFO')  # Change this to DEBUG to see more info.
 
 args = dotdict({
-    'numIters': 15, #1000,
+    'numIters': 3, #1000,
     'numEps': 100,              # Number of complete self-play games to simulate during a new iteration.
     'tempThreshold': 15,        #
     'updateThreshold': 0.6,     # During arena playoff, new neural net will be accepted if threshold or more of games are won.
@@ -24,7 +24,7 @@ args = dotdict({
     'arenaCompare': 40,         # Number of games to play during arena play to determine if new net will be accepted.
     'cpuct': 1,
 
-    'checkpoint': './c4_20ep_15it/',
+    'checkpoint': './c4_test_per/',
     'load_model': False,
     'load_folder_file': ('/dev/models/8x100x50','best.pth.tar'),
     'numItersForTrainExamplesHistory': 20,

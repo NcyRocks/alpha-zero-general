@@ -122,16 +122,19 @@ class Coach():
                 plt.plot(hist.history["loss"])
                 
             # comment in/out below depending on which game.
-            plt.plot(hist.history["pi_loss"]) # tic-tac-toe
-            plt.plot(hist.history["v_loss"])  # tic-tac-toe
-            #plt.plot(hist["pi_loss"]) # connect 4
-            #plt.plot(hist["v_loss"])  # connect 4
+            #plt.plot(hist.history["pi_loss"]) # tic-tac-toe
+            #plt.plot(hist.history["v_loss"])  # tic-tac-toe
+            plt.plot(hist["pi_loss"]) # connect 4
+            plt.plot(hist["v_loss"])  # connect 4
             
             plt.title("Model Loss")
             plt.ylabel("Loss")
             plt.xlabel("Epoch")
-            plt.legend(["loss","pi_loss","v_loss"], loc="upper right") # this is wrong for connect 4.
-            plt.savefig('per_tto_mcts/iteration' + str(i) + '.png') # hardcoded. Have to manually change here if we want a new folder.
+            if "loss" in hist.history.keys():    
+                plt.legend(["loss","pi_loss","v_loss"], loc="upper right") # this is wrong for connect 4.
+            else:
+                plt.legend(["pi_loss","v_loss"], loc="upper right")
+            plt.savefig('c4fig_test/iteration' + str(i) + '.png') # hardcoded. Have to manually change here if we want a new folder.
             plt.clf() # clear the current plot.
             
             

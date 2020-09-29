@@ -34,7 +34,7 @@ class Board:
         self.np_pieces[available_idx[-1]][column] = player
         return True
 
-    def get_valid_moves(self, player): # removes player as 2nd argument. It isn't needed.
+    def get_valid_moves(self, player):
         "Any zero value in top row is a valid move"
         return self.np_pieces[0] == 0
 
@@ -47,7 +47,7 @@ class Board:
                 self._is_diagonal_winner(player_pieces)):
                 return WinState(True, -player)
 
-            # draw has very little value.
+        # draw has very little value.
             if not self.get_valid_moves(player).any():
                 return WinState(True, None)
 
@@ -80,10 +80,6 @@ class Board:
 
     def __str__(self):
         return str(self.np_pieces)
-    
-    #def __getitem__(self, index):
-    #    lst = [DEFAULT_HEIGHT, DEFAULT_WIDTH]
-    #    return lst[]
 
 
 class InvisibleBoard(Board):
@@ -97,6 +93,10 @@ class InvisibleBoard(Board):
             height=height, width=width, win_length=win_length, np_pieces=np_pieces
         )
         self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+        for x in range(height):
+            for y in range(width):
+                if self.visible_pieces[-1][x][y] == 1:
+                    self.visible_pieces[-1][x][y] = 0
 
     def add_stone(self, column, player):
         try:
@@ -110,4 +110,3 @@ class InvisibleBoard(Board):
     def get_valid_moves(self, player):
         "Any zero value in visible top row may be a valid move"
         return self.visible_pieces[player][0] == 0
-

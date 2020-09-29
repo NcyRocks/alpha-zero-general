@@ -9,7 +9,7 @@ tf.disable_v2_behavior()
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 
-tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*12)]) # limit memory as all memory it uses is unnecessary.
+tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*7.5)]) # limit memory as all memory it uses is unnecessary.
 
 ## Code based on OthelloNNet with minimal changes.
 

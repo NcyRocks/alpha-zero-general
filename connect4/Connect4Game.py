@@ -13,10 +13,10 @@ class Connect4Game(Game):
 
     def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
         Game.__init__(self)
-        board = InvisibleBoard(height, width, win_length, np_pieces)
-        self.height = board.height
-        self.width = board.width
-        self.win_length = board.win_length
+        self.base_board = Board(height, width, win_length, np_pieces)
+        self.height = self.base_board.height
+        self.width = self.base_board.width
+        self.win_length = self.base_board.win_length
         self.np_pieces = np_pieces
 
     def getInitBoard(self):
@@ -35,10 +35,11 @@ class Connect4Game(Game):
 
     def getValidMoves(self, board, player):
         "Any zero value in top row in a valid move"
-        return board.get_valid_moves(player)
+        return self.base_board.with_np_pieces(np_pieces=board).get_valid_moves(player)
 
-    def getGameEnded(self, board, player):
-        winstate = board.get_win_state()
+    def getGameEnded(self, board_, player):
+        b = self.base_board.with_np_pieces(np_pieces=board_)
+        winstate = b.get_win_state()
         if winstate.is_ended:
             if winstate.winner is None:
                 # draw has very little value.
@@ -67,12 +68,17 @@ class Connect4Game(Game):
     @staticmethod
     def display(board):
         print(" -----------------------")
-        print(" ".join(map(str, range(7)))) # hardcoded.
+        print(" ".join(map(str, range(len(board[0])))))
         print(board)
         print(" -----------------------")
 
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return Board(self.height, self.width, self.win_length, canonicalBoard)
+
 
 class InvisibleConnectFourGame(Connect4Game):
+    
     def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
         super().__init__(height, width, win_length, np_pieces)
 
@@ -81,10 +87,25 @@ class InvisibleConnectFourGame(Connect4Game):
 
     def getNextState(self, board, player, action):
         if board.add_stone(action, player):
-            return board, -player
+            pieces_1 = 0
+            pieces_2 = 0
+            for y in range(self.height):
+                for x in range(self.width):
+                    if board[x][y] == 1:
+                        pieces_1 += 1
+                    if board[x][y] == -1:
+                        pieces_2 += 1
+            if pieces_1 > pieces_2:
+                return (board, -1)
+            else:
+                return (board, 1)
         else:
-            return board, player
+            return (board, player)
 
     def getCanonicalForm(self, board, player):
         # Flip player from 1 to -1
         return board.visible_pieces[player] * player
+
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return InvisibleBoard(self.height, self.width, self.win_length, canonicalBoard)
