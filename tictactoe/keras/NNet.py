@@ -13,6 +13,8 @@ from NeuralNet import NeuralNet
 import argparse
 from .TicTacToeNNet import TicTacToeNNet as onnet
 
+#from livelossplot import PlotLossesKeras
+
 """
 NeuralNet wrapper class for the TicTacToeNNet.
 
@@ -25,9 +27,9 @@ Based on (copy-pasted from) the NNet by SourKream and Surag Nair.
 args = dotdict({
     'lr': 0.001,
     'dropout': 0.3,
-    'epochs': 10,
+    'epochs': 20,
     'batch_size': 64,
-    'cuda': False,
+    'cuda': True,
     'num_channels': 512,
 })
 
@@ -45,7 +47,11 @@ class NNetWrapper(NeuralNet):
         input_boards = np.asarray(input_boards)
         target_pis = np.asarray(target_pis)
         target_vs = np.asarray(target_vs)
-        self.nnet.model.fit(x = input_boards, y = [target_pis, target_vs], batch_size = args.batch_size, epochs = args.epochs)
+        hist = self.nnet.model.fit(x = input_boards, y = [target_pis, target_vs], 
+                                   batch_size = args.batch_size, epochs = args.epochs)
+        #hist = self.nnet.model.fit(x = input_boards, y = [target_pis, target_vs], batch_size = args.batch_size, 
+                            #epochs = args.epochs, callbacks=[PlotLossesKeras()])
+        return hist
 
     def predict(self, board):
         """
@@ -70,6 +76,7 @@ class NNetWrapper(NeuralNet):
             os.mkdir(folder)
         else:
             print("Checkpoint Directory exists! ")
+        print(filepath)
         self.nnet.model.save_weights(filepath)
 
     def load_checkpoint(self, folder='checkpoint', filename='checkpoint.pth.tar'):

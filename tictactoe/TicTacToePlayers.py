@@ -14,11 +14,14 @@ class RandomPlayer():
         self.game = game
 
     def play(self, board):
+        def set_num(self, number):
+            self.number = number
         a = np.random.randint(self.game.getActionSize())
         valids = self.game.getValidMoves(board, 1)
         while valids[a]!=1:
             a = np.random.randint(self.game.getActionSize())
         return a
+        
 
 
 class HumanTicTacToePlayer():

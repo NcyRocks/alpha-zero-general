@@ -34,7 +34,7 @@ class Board:
         self.np_pieces[available_idx[-1]][column] = player
         return True
 
-    def get_valid_moves(self, player):
+    def get_valid_moves(self, player): # removes player as 2nd argument. It isn't needed.
         "Any zero value in top row is a valid move"
         return self.np_pieces[0] == 0
 
@@ -47,9 +47,9 @@ class Board:
                 self._is_diagonal_winner(player_pieces)):
                 return WinState(True, -player)
 
-        # draw has very little value.
-        if not self.get_valid_moves().any():
-            return WinState(True, None)
+            # draw has very little value.
+            if not self.get_valid_moves(player).any():
+                return WinState(True, None)
 
         # Game is not ended yet.
         return WinState(False, None)
@@ -80,6 +80,10 @@ class Board:
 
     def __str__(self):
         return str(self.np_pieces)
+    
+    #def __getitem__(self, index):
+    #    lst = [DEFAULT_HEIGHT, DEFAULT_WIDTH]
+    #    return lst[]
 
 
 class InvisibleBoard(Board):

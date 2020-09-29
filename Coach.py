@@ -5,6 +5,8 @@ from collections import deque
 from pickle import Pickler, Unpickler
 from random import shuffle
 
+import matplotlib.pyplot as plt
+
 import numpy as np
 from tqdm import tqdm
 
@@ -111,10 +113,29 @@ class Coach():
             shuffle(trainExamples)
 
             # training new network, keeping a copy of the old one
-            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+            self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.h5')#filename='temp.pth.tar')
+            self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.h5')#filename='temp.pth.tar')
 
-            self.nnet.train(trainExamples)
+            hist = self.nnet.train(trainExamples)
+            #print(hist.history.keys())
+            #print("test_hist",hist.history[hist.history.keys()[0]])
+            if "loss" in hist.history.keys():
+                plt.plot(hist.history["loss"])
+                
+            # comment in/out below depending on which game.
+            plt.plot(hist.history["pi_loss"]) # tic-tac-toe
+            plt.plot(hist.history["v_loss"])  # tic-tac-toe
+            #plt.plot(hist["pi_loss"]) # connect 4
+            #plt.plot(hist["v_loss"])  # connect 4
+            
+            plt.title("Model Loss")
+            plt.ylabel("Loss")
+            plt.xlabel("Epoch")
+            plt.legend(["loss","pi_loss","v_loss"], loc="upper right") # this is wrong for connect 4.
+            plt.savefig('per_tto/iteation' + str(i) + '.png') # hardcoded. Have to manually change here if we want a new folder.
+            plt.clf() # clear the current plot.
+            
+            
             log.info('PITTING AGAINST PREVIOUS VERSION')
 
             if self.useMCTS:
@@ -136,14 +157,14 @@ class Coach():
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))
             if pwins + nwins == 0 or float(nwins) / (pwins + nwins) < self.args.updateThreshold:
                 log.info('REJECTING NEW MODEL')
-                self.nnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
+                self.nnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.h5')#filename='temp.pth.tar'))
             else:
                 log.info('ACCEPTING NEW MODEL')
                 self.nnet.save_checkpoint(folder=self.args.checkpoint, filename=self.getCheckpointFile(i))
-                self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='best.pth.tar')
+                self.nnet.save_checkpoint(folder=self.args.checkpoint,  filename='best.h5')#filename='temp.pth.tar')
 
     def getCheckpointFile(self, iteration):
-        return 'checkpoint_' + str(iteration) + '.pth.tar'
+        return 'checkpoint_' + str(iteration) + 'h5'
 
     def saveTrainExamples(self, iteration):
         folder = self.args.checkpoint

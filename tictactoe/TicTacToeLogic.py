@@ -1,5 +1,4 @@
 import numpy as np
-
 # from bkcharts.attributes import color
 class Board:
     """Board class for the game of TicTacToe.
@@ -19,16 +18,7 @@ class Board:
     """
 
     # list of all 8 directions on the board, as (x,y) offsets
-    __directions = [
-        (1, 1),
-        (1, 0),
-        (1, -1),
-        (0, -1),
-        (-1, -1),
-        (-1, 0),
-        (-1, 1),
-        (0, 1),
-    ]
+    __directions = [(1,1),(1,0),(1,-1),(0,-1),(-1,-1),(-1,0),(-1,1),(0,1)]
 
     def __init__(self, n=3):
         "Set up initial board configuration."
@@ -41,7 +31,7 @@ class Board:
         self.pieces = np.array(pieces)
 
     # add [][] indexer syntax to the Board
-    def __getitem__(self, index):
+    def __getitem__(self, index): 
         return self.pieces[index]
 
     def is_legal_move(self, move):
@@ -64,18 +54,18 @@ class Board:
         # Get all the empty squares (color==0)
         for y in range(self.n):
             for x in range(self.n):
-                if self[x][y] == 0:
-                    newmove = (x, y)
+                if self[x][y]==0:
+                    newmove = (x,y)
                     moves.add(newmove)
         return list(moves)
 
     def has_legal_moves(self):
         for y in range(self.n):
             for x in range(self.n):
-                if self[x][y] == 0:
+                if self[x][y]==0:
                     return True
         return False
-
+    
     def is_win(self, color):
         """Check whether the given player has collected a triplet in any direction; 
         @param color (1=white,-1=black)
@@ -85,32 +75,32 @@ class Board:
         for y in range(self.n):
             count = 0
             for x in range(self.n):
-                if self[x][y] == color:
+                if self[x][y]==color:
                     count += 1
-            if count == win:
+            if count==win:
                 return True
         # check x-strips
         for x in range(self.n):
             count = 0
             for y in range(self.n):
-                if self[x][y] == color:
+                if self[x][y]==color:
                     count += 1
-            if count == win:
+            if count==win:
                 return True
         # check two diagonal strips
         count = 0
         for d in range(self.n):
-            if self[d][d] == color:
+            if self[d][d]==color:
                 count += 1
-        if count == win:
+        if count==win:
             return True
         count = 0
         for d in range(self.n):
-            if self[d][self.n - d - 1] == color:
+            if self[d][self.n-d-1]==color:
                 count += 1
-        if count == win:
+        if count==win:
             return True
-
+        
         return False
 
     def execute_move(self, move, color):
@@ -118,13 +108,14 @@ class Board:
         color gives the color of the piece to play (1=white, -1=black).
         """
 
-        (x, y) = move
+        (x,y) = move
 
         # Add the piece to the empty square.
-        assert self[x][y] == 0
-        self[x][y] = color
-            
-        return True
+        if self[x][y] == 0:
+            self[x][y] = color
+            return True
+
+        return False
 
 
 class InvisibleBoard(Board):
@@ -135,17 +126,20 @@ class InvisibleBoard(Board):
 
     def __init__(self, n=3):
         super().__init__(n=n)
-        self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+        self.visible_pieces = {player: [None] * self.n for player in (1, -1)}
+        for player in (1, -1):
+            for i in range(self.n):
+                self.visible_pieces[player][i] = [0] * self.n
+            self.visible_pieces[player] = np.array(self.visible_pieces[player])
 
     def execute_move(self, move, color):
+        move_is_valid = super().execute_move(move, color)
         (x, y) = move
-        try:
-            super().execute_move(move, color)
-            self.visible_pieces[color][x][y] = color
-            return True
-        except AssertionError:
+        if not move_is_valid:
             self.visible_pieces[color][x][y] = -color
-            return False
+        else:
+            self.visible_pieces[color][x][y] = color
+        return move_is_valid
 
     def get_legal_moves(self, color):
         """Returns all the seemingly legal moves for the given color.
@@ -158,6 +152,6 @@ class InvisibleBoard(Board):
         for y in range(self.n):
             for x in range(self.n):
                 if self.pieces[x][y] != color:
-                    newmove = (x, y)
+                    newmove = (x,y)
                     moves.add(newmove)
         return list(moves)

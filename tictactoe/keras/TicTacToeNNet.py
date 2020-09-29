@@ -3,9 +3,18 @@ sys.path.append('..')
 from utils import *
 
 import argparse
-from keras.models import *
-from keras.layers import *
-from keras.optimizers import *
+
+import tensorflow as tf
+#tf.config.gpu.set_per_process_memory_fraction(0.75)
+#tf.config.gpu.set_per_process_memory_growth(True)
+
+gpus = tf.config.experimental.list_physical_devices('GPU')
+
+tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*12)])
+
+from tensorflow.keras.models import *
+from tensorflow.keras.layers import *
+from tensorflow.keras.optimizers import *
 
 """
 NeuralNet for the game of TicTacToe.

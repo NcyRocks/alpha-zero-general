@@ -13,7 +13,7 @@ class Connect4Game(Game):
 
     def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
         Game.__init__(self)
-        board = Board(height, width, win_length, np_pieces)
+        board = InvisibleBoard(height, width, win_length, np_pieces)
         self.height = board.height
         self.width = board.width
         self.win_length = board.win_length
@@ -67,7 +67,7 @@ class Connect4Game(Game):
     @staticmethod
     def display(board):
         print(" -----------------------")
-        print(" ".join(map(str, range(len(board[0])))))
+        print(" ".join(map(str, range(7)))) # hardcoded.
         print(board)
         print(" -----------------------")
 

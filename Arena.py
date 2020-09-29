@@ -50,7 +50,8 @@ class Arena():
 
             valids = self.game.getValidMoves(board, curPlayer)
             action = players[curPlayer + 1](self.game.getCanonicalForm(board, curPlayer))
-
+            #print(valids)
+            #print(action)
             if valids[action] == 0:
                 log.error(f'Action {action} is not valid!')
                 log.debug(f'valids = {valids}')
