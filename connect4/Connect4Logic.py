@@ -44,7 +44,7 @@ class Board:
 
     def get_win_state(self):
         for player in [-1, 1]:
-            player_pieces = self.np_pieces == -player
+            player_pieces = self.np_pieces * -player
             # Check rows & columns for win
             if (self._is_straight_winner(player_pieces) or
                 self._is_straight_winner(player_pieces.transpose()) or
