@@ -98,10 +98,12 @@ class InvisibleBoard(Board):
             height=height, width=width, win_length=win_length, np_pieces=np_pieces
         )
         self.visible_pieces = {color: np.copy(self.np_pieces) for color in [1, -1]}
-        for x in range(self.height):
-            for y in range(self.width):
+        for y in range(self.width):
+            for x in range(self.height):
                 if self.visible_pieces[-player][x][y] == player:
                     self.visible_pieces[-player][x][y] = 0
+                elif self.visible_pieces[-player][x][y] == -player:
+                    break
 
     def add_stone(self, column, player):
         try:
