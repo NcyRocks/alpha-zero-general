@@ -89,7 +89,7 @@ class TicTacToeGame(Game):
 
     def getCanonicalForm(self, board, player):
         # return state if player==1, else return -state if player==-1
-        return player * board.pieces
+        return board.pieces
 
     def getSymmetries(self, board, pi):
         # mirror, rotational
@@ -128,9 +128,9 @@ class TicTacToeGame(Game):
             for x in range(n):
                 piece = board.pieces[y][x]  # get the piece to print
                 if piece == -1:
-                    print("X ", end="")
-                elif piece == 1:
                     print("O ", end="")
+                elif piece == 1:
+                    print("X ", end="")
                 else:
                     if x == n:
                         print("-", end="")
@@ -143,7 +143,7 @@ class TicTacToeGame(Game):
             print("-", end="-")
         print("--")
 
-    def getModelBoard(self, canonicalBoard):
+    def getModelBoard(self, canonicalBoard, player=1):
         # TODO: Rename
         return Board(self.n, canonicalBoard)
 
@@ -172,8 +172,8 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         return InvisibleBoard(self.n)
 
     def getCanonicalForm(self, board, player):
-        # return visible state if player==1, else return -state if player==-1
-        return board.visible_pieces[player] * player
+        # return visible state of player. NOTE: This is NOT the same behaviour as other implementations. Be careful
+        return board.visible_pieces[player] 
 
     def getPossibleOutcomes(self, board, player, action):
         # Board should only be a np array, not an actual board, for I-didn't-write-this-I'm-just-tying-things-together-that-shouldn't-go-together reasons
@@ -204,9 +204,9 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         #     invalid_odds = 0
         return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
 
-    def getModelBoard(self, canonicalBoard):
+    def getModelBoard(self, canonicalBoard, player):
         # TODO: Rename
-        return InvisibleBoard(self.n, canonicalBoard)
+        return InvisibleBoard(self.n, canonicalBoard, player)
 
     def getNextState(self, board, player, action):
         # if player takes action on board, return next (board, player)
@@ -241,7 +241,7 @@ class InvisibleTicTacToeGame(TicTacToeGame):
             print("   ", end="")
             for y in range(n):
                 print(y, "", end="")
-            print(" ", end="")
+            print("  ", end="")
         print("")
 
         for _ in range(3):
@@ -256,9 +256,9 @@ class InvisibleTicTacToeGame(TicTacToeGame):
                 for x in range(n):
                     piece = boards[i][y][x]  # get the piece to print
                     if piece == -1:
-                        print("X ", end="")
-                    elif piece == 1:
                         print("O ", end="")
+                    elif piece == 1:
+                        print("X ", end="")
                     else:
                         if x == n:
                             print("-", end="")

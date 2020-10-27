@@ -31,7 +31,7 @@ class Imp_MCTS():
         self.player = number
 
     def __call__(self, canonicalBoard, temp=0):
-        return np.argmax(self.getActionProb(canonicalBoard, temp))
+        return np.random.choice(range(self.game.getActionSize()), p=self.getActionProb(canonicalBoard, temp))
 
     def getActionProb(self, canonicalBoard, temp=1):
         """
@@ -42,22 +42,34 @@ class Imp_MCTS():
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
-        for i in range(2):
-            board = self.game.getModelBoard(canonicalBoard)
-            self.search(board, 1, -1) # Ensure the current player's moves are explored at least once??
-        for i in range(self.args.numMCTSSims-2):
-            board = self.game.getModelBoard(canonicalBoard)
-            next_player = self.game.getNextPlayer(board) # This isn't going to be valid for all games...
+        for i in range(self.args.numMCTSSims):
+            board = self.game.getModelBoard(canonicalBoard, self.player)
+            # This isn't going to be valid for all games...
+            next_player = self.game.getNextPlayer(board)
             self.search(board, next_player, -next_player)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
+        # Is counts even the best way to do it?? Why not values??
+        counts = [self.Nsa[(s, a)] if (
+            s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
         if temp == 0:
-            bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
-            bestA = np.random.choice(bestAs)
+            if sum(counts) != 0:
+                bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
+                bestA = np.random.choice(bestAs)
+            else:
+                valids = self.game.getValidMoves(canonicalBoard, self.player)
+                bestA = np.argmax(self.nnet.predict(canonicalBoard * self.player)[0] * valids)
             probs = [0] * len(counts)
             probs[bestA] = 1
+            return probs
+
+        if sum(counts) == 0:
+            # I know, I know, I'm sorry
+            valids = self.game.getValidMoves(canonicalBoard, self.player)
+            probs = self.nnet.predict(canonicalBoard * self.player)[0] * valids
+            prob_sum = np.sum(probs)
+            probs /= prob_sum
             return probs
 
         counts = [x ** (1. / temp) for x in counts]
@@ -85,8 +97,8 @@ class Imp_MCTS():
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
-        canonicalBoard = self.game.getCanonicalForm(board, player)
-        multiplier = player * prev_player #-1 if different, 1 if same
+        canonicalBoard = self.game.getCanonicalForm(board, player) * player
+        multiplier = player * prev_player  # -1 if different, 1 if same
 
         s = self.game.stringRepresentation(canonicalBoard)
 
@@ -108,7 +120,7 @@ class Imp_MCTS():
                 # if all valid moves were masked make all valid moves equally probable
 
                 # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
+                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.
                 log.error("All valid moves were masked, doing a workaround.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])

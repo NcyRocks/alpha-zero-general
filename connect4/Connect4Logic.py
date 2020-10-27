@@ -93,26 +93,28 @@ class InvisibleBoard(Board):
     Players can see their own pieces and any pieces of their opponent's underneath theirs.
     """
 
-    def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
+    def __init__(self, height=None, width=None, win_length=None, np_pieces=None, player=1):
         super().__init__(
             height=height, width=width, win_length=win_length, np_pieces=np_pieces
         )
-        self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
+        self.visible_pieces = {color: np.copy(self.np_pieces) for color in [1, -1]}
         for x in range(self.height):
             for y in range(self.width):
-                if self.visible_pieces[-1][x][y] == 1:
-                    self.visible_pieces[-1][x][y] = 0
+                if self.visible_pieces[-player][x][y] == player:
+                    self.visible_pieces[-player][x][y] = 0
 
     def add_stone(self, column, player):
         try:
             super().add_stone(column, player)
-            self.visible_pieces[player][:, column] = self.np_pieces[:, column]
+            for i in range(self.height):
+                self.visible_pieces[player][i][column] = self.np_pieces[i][column]
             return True
         except ValueError:
-            self.visible_pieces[player][:, column] = self.np_pieces[:, column]
+            for i in range(self.height):
+                self.visible_pieces[player][i][column] = self.np_pieces[i][column]
             return False
 
     def get_valid_moves(self, player):
-        "Any zero value in visible top row may be a valid move"
+        "Any visible zero value in top row may be a valid move"
         return self.visible_pieces[player][0] == 0
 

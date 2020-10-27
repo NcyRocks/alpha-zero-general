@@ -64,7 +64,7 @@ class Connect4Game(Game):
 
     def getCanonicalForm(self, board, player):
         # Flip player from 1 to -1
-        return board.np_pieces * player
+        return board.np_pieces
 
     def getSymmetries(self, board, pi):
         """Board is left/right board symmetric"""
@@ -80,7 +80,7 @@ class Connect4Game(Game):
         print(board)
         print(" -----------------------")
 
-    def getModelBoard(self, canonicalBoard):
+    def getModelBoard(self, canonicalBoard, player=1):
         # TODO: Rename
         return Board(self.height, self.width, self.win_length, canonicalBoard)
 
@@ -118,8 +118,17 @@ class InvisibleConnectFourGame(Connect4Game):
 
     def getCanonicalForm(self, board, player):
         # Flip player from 1 to -1
-        return board.visible_pieces[player] * player
+        return np.copy(board.visible_pieces[player])
 
-    def getModelBoard(self, canonicalBoard):
+    def getModelBoard(self, canonicalBoard, player):
         # TODO: Rename
-        return InvisibleBoard(self.height, self.width, self.win_length, canonicalBoard)
+        return InvisibleBoard(self.height, self.width, self.win_length, canonicalBoard, player)
+
+    @staticmethod
+    def display(board):
+        print(" -----------------------")
+        print(" ".join(map(str, range(len(board[0])))))
+        print(board)
+        print(board.visible_pieces[1])
+        print(board.visible_pieces[-1])
+        print(" -----------------------")
