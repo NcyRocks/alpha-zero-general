@@ -64,7 +64,7 @@ class Connect4Game(Game):
 
     def getCanonicalForm(self, board, player):
         # Flip player from 1 to -1
-        return board.np_pieces
+        return np.copy(board.np_pieces)
 
     def getSymmetries(self, board, pi):
         """Board is left/right board symmetric"""
@@ -99,7 +99,7 @@ class Connect4Game(Game):
             return 1
 
 
-class InvisibleConnectFourGame(Connect4Game):
+class InvisibleConnect4Game(Connect4Game):
     
     def __init__(self, height=None, width=None, win_length=None, np_pieces=None):
         super().__init__(height, width, win_length, np_pieces)
