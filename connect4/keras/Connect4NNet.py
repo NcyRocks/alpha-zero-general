@@ -2,16 +2,16 @@ import sys
 sys.path.append('..')
 from utils import *
 
-#import tensorflow as tf
-# below is needed if tensorflow 2.x is installed. Need 1.x behaviour.
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
+import tensorflow as tf
+
+## Code based on OthelloNNet with minimal changes.
 
 gpus = tf.config.experimental.list_physical_devices('GPU')
 
-tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*7.5)]) # limit memory as all memory it uses is unnecessary.
+# change gpus[0] back to a 0 if it isn't and you don't want it another value.
+tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*40)])
 
-## Code based on OthelloNNet with minimal changes.
+
 
 
 class Connect4NNet():
@@ -24,14 +24,9 @@ class Connect4NNet():
         # Renaming functions
         Relu = tf.nn.relu
         Tanh = tf.nn.tanh
-        # tensorflow 1.x below
         BatchNormalization = tf.layers.batch_normalization
         Dropout = tf.layers.dropout
         Dense = tf.layers.dense
-        # tensorflow 2.x below (use keras)
-        #BatchNormalization = tf.keras.layers.BatchNormalization
-        #Dropout = tf.keras.layers.Dropout
-        #Dense = tf.keras.layers.Dense
 
         # Neural Net
         self.graph = tf.Graph()

@@ -9,18 +9,18 @@ sys.path.append('../../')
 from utils import *
 from NeuralNet import NeuralNet
 
-#import tensorflow as tf
+#import os
+os.environ["CUDA_VISIBLE_DEVICES"]="2"
 
-# need tensorflow 1.x compatibilty, not 2.x.
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
-
+import tensorflow as tf
 from .Connect4NNet import Connect4NNet as onnet
+
+
 
 args = dotdict({
     'lr': 0.001,
-    'dropout': 0.3,
-    'epochs': 10,
+    'dropout': 0.24,
+    'epochs': 25,
     'batch_size': 64,
     'num_channels': 512,
 })
@@ -44,17 +44,17 @@ class NNetWrapper(NeuralNet):
         """
         examples: list of examples, each example is of form (board, pi, v)
         """
+
         hist = dict()
         hist["pi_loss"] = []
         hist["v_loss"] = []
+        
         for epoch in range(args.epochs):
             print('EPOCH ::: ' + str(epoch + 1))
             pi_losses = AverageMeter()
             v_losses = AverageMeter()
             batch_count = int(len(examples) / args.batch_size)
-            
-            
-            
+
             # self.sess.run(tf.local_variables_initializer())
             t = tqdm(range(batch_count), desc='Training Net')
             for _ in t:
@@ -71,6 +71,7 @@ class NNetWrapper(NeuralNet):
                 pi_losses.update(pi_loss, len(boards))
                 v_losses.update(v_loss, len(boards))
                 t.set_postfix(Loss_pi=pi_losses, Loss_v=v_losses)
+                
             hist["pi_loss"].append(pi_losses.avg)
             hist["v_loss"].append(v_losses.avg)
         return hist

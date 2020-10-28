@@ -23,7 +23,11 @@ class Board:
             self.np_pieces = np.zeros([self.height, self.width], dtype=np.int)
         else:
             self.np_pieces = np_pieces
-            #assert self.np_pieces.shape == (self.height, self.width)
+            assert self.np_pieces.shape == (self.height, self.width)
+
+    # add [][] indexer syntax to the Board
+    def __getitem__(self, index):
+        return self.np_pieces[index]
 
     def add_stone(self, column, player):
         "Create copy of board containing new stone."
@@ -40,9 +44,7 @@ class Board:
 
     def get_win_state(self):
         for player in [-1, 1]:
-            player_pieces = self.np_pieces == -player
-            print("n_p_pieces",self.np_pieces)
-            print("pp",player_pieces)
+            player_pieces = self.np_pieces * -player
             # Check rows & columns for win
             if (self._is_straight_winner(player_pieces) or
                 self._is_straight_winner(player_pieces.transpose()) or
@@ -50,6 +52,7 @@ class Board:
                 return WinState(True, -player)
 
         # draw has very little value.
+        for player in [-1, 1]:
             if not self.get_valid_moves(player).any():
                 return WinState(True, None)
 
@@ -95,8 +98,8 @@ class InvisibleBoard(Board):
             height=height, width=width, win_length=win_length, np_pieces=np_pieces
         )
         self.visible_pieces = {player: np.copy(self.np_pieces) for player in [1, -1]}
-        for x in range(height):
-            for y in range(width):
+        for x in range(self.height):
+            for y in range(self.width):
                 if self.visible_pieces[-1][x][y] == 1:
                     self.visible_pieces[-1][x][y] = 0
 

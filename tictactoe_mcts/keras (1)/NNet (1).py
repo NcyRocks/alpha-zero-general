@@ -6,6 +6,9 @@ import random
 import numpy as np
 import math
 import sys
+
+os.environ["CUDA_VISIBLE_DEVICES"]="0"
+
 sys.path.append('..')
 from utils import *
 from NeuralNet import NeuralNet
@@ -26,7 +29,7 @@ Based on (copy-pasted from) the NNet by SourKream and Surag Nair.
 
 args = dotdict({
     'lr': 0.001,
-    'dropout': 0.3,
+    'dropout': 0.24,
     'epochs': 20,
     'batch_size': 64,
     'cuda': True,

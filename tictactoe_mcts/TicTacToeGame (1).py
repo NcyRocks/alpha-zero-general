@@ -109,8 +109,6 @@ class TicTacToeGame(Game):
         # 8x8 numpy array (canonical board)
         return board.tostring()
 
-    def getModelBoard(self, canonicalBoard):
-        return Board(self.n, canonicalBoard)
     @staticmethod
     def display(board):
         n = board.pieces.shape[0]
@@ -142,6 +140,24 @@ class TicTacToeGame(Game):
         for _ in range(n):
             print("-", end="-")
         print("--")
+
+    def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
+        return Board(self.n, canonicalBoard)
+
+    def getNextPlayer(self, board):
+        pieces_1 = 0
+        pieces_2 = 0
+        for y in range(self.n):
+            for x in range(self.n):
+                if board[x][y] == 1:
+                    pieces_1 += 1
+                if board[x][y] == -1:
+                    pieces_2 += 1
+        if pieces_1 > pieces_2:
+            return -1
+        else:
+            return 1
 
 
 class InvisibleTicTacToeGame(TicTacToeGame):
@@ -187,6 +203,7 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         return [(if_valid, valid_odds), (if_invalid, invalid_odds)]
 
     def getModelBoard(self, canonicalBoard):
+        # TODO: Rename
         return InvisibleBoard(self.n, canonicalBoard)
 
     def getNextState(self, board, player, action):
@@ -197,20 +214,12 @@ class InvisibleTicTacToeGame(TicTacToeGame):
         if action == self.n * self.n:
             return (board, -player)
         move = (int(action / self.n), action % self.n)
-        board.execute_move(move, player)
+        if board.execute_move(move, player):
         # Weird solution that'll probably work
-        pieces_1 = 0
-        pieces_2 = 0
-        for y in range(self.n):
-            for x in range(self.n):
-                if board[x][y] == 1:
-                    pieces_1 += 1
-                if board[x][y] == -1:
-                    pieces_2 += 1
-        if pieces_1 > pieces_2:
-            return (board, -1)
+            next_player = self.getNextPlayer(board)
+            return (board, next_player)
         else:
-            return (board, 1)
+            return (board, player)
 
     @staticmethod
     def display(board):

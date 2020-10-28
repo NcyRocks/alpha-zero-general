@@ -11,7 +11,7 @@ import tensorflow as tf
 gpus = tf.config.experimental.list_physical_devices('GPU')
 
 # change gpus[0] back to a 0 if it isn't and you don't want it another value.
-tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*10)])
+tf.config.experimental.set_virtual_device_configuration(gpus[0], [tf.config.experimental.VirtualDeviceConfiguration(memory_limit=1024*40)])
 
 from tensorflow.keras.models import *
 from tensorflow.keras.layers import *
