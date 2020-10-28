@@ -49,7 +49,7 @@ class Imp_MCTS():
 
         s = self.game.stringRepresentation(canonicalBoard)
         counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
-        print(counts)
+       # print(counts)
         if temp == 0:
             bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
             bestA = np.random.choice(bestAs)
@@ -61,6 +61,12 @@ class Imp_MCTS():
         counts_sum = float(sum(counts))
         if counts_sum == 0: counts_sum = 1
         probs = [x / counts_sum for x in counts]
+        if float(sum(counts)) == 0: # error if all counts are zeros.
+            bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
+            bestA = np.random.choice(bestAs)
+            probs = [0] * len(counts)
+            probs[bestA] = 1
+            return probs
         return probs
 
     def search(self, board, player, prev_player):
@@ -138,10 +144,12 @@ class Imp_MCTS():
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
             self.Nsa[(s, a)] += 1
+            #print("REACH1")
 
         else:
             self.Qsa[(s, a)] = v
             self.Nsa[(s, a)] = 1
+            #print("REACH2")
 
         self.Ns[s] += 1
         return v * multiplier

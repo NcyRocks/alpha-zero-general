@@ -38,6 +38,7 @@ class Connect4Game(Game):
         return self.base_board.with_np_pieces(np_pieces=board).get_valid_moves(player)
 
     def getGameEnded(self, board_, player):
+        #print("BOARD TEST",board_)
         b = self.base_board.with_np_pieces(np_pieces=board_)
         winstate = b.get_win_state()
         if winstate.is_ended:
