@@ -10,6 +10,7 @@ from tqdm import tqdm
 
 from Arena import Arena
 from MCTS import MCTS
+from tictactoe.TicTacToePlayers import NaiveNNetPlayer
 
 log = logging.getLogger(__name__)
 
@@ -20,12 +21,13 @@ class Coach():
     in Game and NeuralNet. args are specified in main.py.
     """
 
-    def __init__(self, game, nnet, args):
+    def __init__(self, game, nnet, args, useMCTS=True):
         self.game = game
         self.nnet = nnet
         self.pnet = self.nnet.__class__(self.game)  # the competitor network
         self.args = args
-        self.mcts = MCTS(self.game, self.nnet, self.args)
+        self.useMCTS = useMCTS
+        self.mcts = {1: MCTS(self.game, self.nnet, 1, self.args), -1: MCTS(self.game, self.nnet, -1, self.args)}
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
 
@@ -55,7 +57,11 @@ class Coach():
             canonicalBoard = self.game.getCanonicalForm(board, self.curPlayer)
             temp = int(episodeStep < self.args.tempThreshold)
 
-            pi = self.mcts.getActionProb(canonicalBoard, temp=temp)
+            if self.useMCTS:
+                pi = self.mcts[self.curPlayer].getActionProb(canonicalBoard, temp=temp)
+            else:
+                pi = self.nnet.predict(canonicalBoard)[0]
+
             sym = self.game.getSymmetries(canonicalBoard, pi)
             for b, p in sym:
                 trainExamples.append([b, self.curPlayer, p, None])
@@ -85,7 +91,7 @@ class Coach():
                 iterationTrainExamples = deque([], maxlen=self.args.maxlenOfQueue)
 
                 for _ in tqdm(range(self.args.numEps), desc="Self Play"):
-                    self.mcts = MCTS(self.game, self.nnet, self.args)  # reset search tree
+                    self.mcts = {1: MCTS(self.game, self.nnet, 1, self.args), -1: MCTS(self.game, self.nnet, -1, self.args)}  # reset search tree
                     iterationTrainExamples += self.executeEpisode()
 
                 # save the iteration examples to the history 
@@ -108,14 +114,22 @@ class Coach():
             # training new network, keeping a copy of the old one
             self.nnet.save_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
             self.pnet.load_checkpoint(folder=self.args.checkpoint, filename='temp.pth.tar')
-            pmcts = MCTS(self.game, self.pnet, self.args)
 
             self.nnet.train(trainExamples)
-            nmcts = MCTS(self.game, self.nnet, self.args)
-
             log.info('PITTING AGAINST PREVIOUS VERSION')
-            arena = Arena(lambda x: np.argmax(pmcts.getActionProb(x, temp=0)),
-                          lambda x: np.argmax(nmcts.getActionProb(x, temp=0)), self.game)
+
+            if self.useMCTS:
+                pmcts = MCTS(self.game, self.pnet, 1, self.args)
+
+                nmcts = MCTS(self.game, self.nnet, -1, self.args)
+
+                arena = Arena(pmcts, nmcts, self.game, self.game.display)
+            else:
+                arena = Arena(NaiveNNetPlayer(self.game, self.pnet, 1),
+                            NaiveNNetPlayer(self.game, self.nnet, -1), self.game, self.game.display)
+
+
+
             pwins, nwins, draws = arena.playGames(self.args.arenaCompare)
 
             log.info('NEW/PREV WINS : %d / %d ; DRAWS : %d' % (nwins, pwins, draws))

@@ -27,7 +27,7 @@ class Arena():
         self.game = game
         self.display = display
 
-    def playGame(self, verbose=False):
+    def playGame(self, verbose=True):
         """
         Executes one episode of a game.
 
@@ -47,9 +47,9 @@ class Arena():
                 assert self.display
                 print("Turn ", str(it), "Player ", str(curPlayer))
                 self.display(board)
-            action = players[curPlayer + 1](self.game.getCanonicalForm(board, curPlayer))
 
-            valids = self.game.getValidMoves(self.game.getCanonicalForm(board, curPlayer), 1)
+            valids = self.game.getValidMoves(board, curPlayer)
+            action = players[curPlayer + 1](self.game.getCanonicalForm(board, curPlayer))
 
             if valids[action] == 0:
                 log.error(f'Action {action} is not valid!')
@@ -62,7 +62,7 @@ class Arena():
             self.display(board)
         return curPlayer * self.game.getGameEnded(board, curPlayer)
 
-    def playGames(self, num, verbose=False):
+    def playGames(self, num, verbose=True):
         """
         Plays num games in which player1 starts num/2 games and player2 starts
         num/2 games.
@@ -87,6 +87,8 @@ class Arena():
                 draws += 1
 
         self.player1, self.player2 = self.player2, self.player1
+        self.player1.set_num(1)
+        self.player2.set_num(-1)
 
         for _ in tqdm(range(num), desc="Arena.playGames (2)"):
             gameResult = self.playGame(verbose=verbose)

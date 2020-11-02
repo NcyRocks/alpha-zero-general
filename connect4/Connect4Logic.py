@@ -5,10 +5,10 @@ DEFAULT_HEIGHT = 6
 DEFAULT_WIDTH = 7
 DEFAULT_WIN_LENGTH = 4
 
-WinState = namedtuple('WinState', 'is_ended winner')
+WinState = namedtuple("WinState", "is_ended winner")
 
 
-class Board():
+class Board:
     """
     Connect4 Board.
     """
@@ -25,21 +25,26 @@ class Board():
             self.np_pieces = np_pieces
             assert self.np_pieces.shape == (self.height, self.width)
 
+    # add [][] indexer syntax to the Board
+    def __getitem__(self, index):
+        return self.np_pieces[index]
+
     def add_stone(self, column, player):
         "Create copy of board containing new stone."
-        available_idx, = np.where(self.np_pieces[:, column] == 0)
+        (available_idx,) = np.where(self.np_pieces[:, column] == 0)
         if len(available_idx) == 0:
             raise ValueError("Can't play column %s on board %s" % (column, self))
 
         self.np_pieces[available_idx[-1]][column] = player
+        return True
 
-    def get_valid_moves(self):
-        "Any zero value in top row in a valid move"
+    def get_valid_moves(self, player):
+        "Any zero value in top row is a valid move"
         return self.np_pieces[0] == 0
 
     def get_win_state(self):
         for player in [-1, 1]:
-            player_pieces = self.np_pieces == -player
+            player_pieces = self.np_pieces * -player
             # Check rows & columns for win
             if (self._is_straight_winner(player_pieces) or
                 self._is_straight_winner(player_pieces.transpose()) or
@@ -47,8 +52,9 @@ class Board():
                 return WinState(True, -player)
 
         # draw has very little value.
-        if not self.get_valid_moves().any():
-            return WinState(True, None)
+        for player in [-1, 1]:
+            if not self.get_valid_moves(player).any():
+                return WinState(True, None)
 
         # Game is not ended yet.
         return WinState(False, None)
@@ -79,3 +85,38 @@ class Board():
 
     def __str__(self):
         return str(self.np_pieces)
+
+
+class InvisibleBoard(Board):
+    """
+    Board for Invisible Connect 4.
+    Players can see their own pieces and any pieces of their opponent's underneath theirs.
+    """
+
+    def __init__(self, height=None, width=None, win_length=None, np_pieces=None, player=1):
+        super().__init__(
+            height=height, width=width, win_length=win_length, np_pieces=np_pieces
+        )
+        self.visible_pieces = {color: np.copy(self.np_pieces) for color in [1, -1]}
+        for y in range(self.width):
+            for x in range(self.height):
+                if self.visible_pieces[-player][x][y] == player:
+                    self.visible_pieces[-player][x][y] = 0
+                elif self.visible_pieces[-player][x][y] == -player:
+                    break
+
+    def add_stone(self, column, player):
+        try:
+            super().add_stone(column, player)
+            for i in range(self.height):
+                self.visible_pieces[player][i][column] = self.np_pieces[i][column]
+            return True
+        except ValueError:
+            for i in range(self.height):
+                self.visible_pieces[player][i][column] = self.np_pieces[i][column]
+            return False
+
+    def get_valid_moves(self, player):
+        "Any visible zero value in top row may be a valid move"
+        return self.visible_pieces[player][0] == 0
+
