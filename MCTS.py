@@ -10,10 +10,11 @@ log = logging.getLogger(__name__)
 
 class MCTS():
     """
-    This class handles the MCTS tree.
+    This class handles the MCTS tree for perfect and imperfect info games alike.
+    Meant to interface with placement-based imp-inf games like Tic-Tac-Toe (as opposed to movement-based ones like Kriegspiel).
     """
 
-    def __init__(self, game, nnet, args):
+    def __init__(self, game, nnet, player, args):
         self.game = game
         self.nnet = nnet
         self.args = args
@@ -24,27 +25,47 @@ class MCTS():
 
         self.Es = {}  # stores game.getGameEnded ended for board s
         self.Vs = {}  # stores game.getValidMoves for board s
+        self.player = player
+
+    def set_num(self, number):
+        self.player = number
+
+    def __call__(self, canonicalBoard, temp=0):
+        return np.random.choice(range(self.game.getActionSize()), p=self.getActionProb(canonicalBoard, temp))
 
     def getActionProb(self, canonicalBoard, temp=1):
         """
-        This function performs numMCTSSims simulations of MCTS starting from
-        canonicalBoard.
+        This function performs numMCTSSims simulations of MCTS using the given canonicalBoard.
 
         Returns:
             probs: a policy vector where the probability of the ith action is
                    proportional to Nsa[(s,a)]**(1./temp)
         """
         for i in range(self.args.numMCTSSims):
-            self.search(canonicalBoard)
+            board = self.game.getModelBoard(canonicalBoard, self.player)
+            next_player = self.game.getNextPlayer(board)
+            self.search(board, next_player, -next_player)
 
         s = self.game.stringRepresentation(canonicalBoard)
-        counts = [self.Nsa[(s, a)] if (s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
+        counts = [self.Nsa[(s, a)] if (
+            s, a) in self.Nsa else 0 for a in range(self.game.getActionSize())]
 
         if temp == 0:
-            bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
-            bestA = np.random.choice(bestAs)
+            if sum(counts) != 0:
+                bestAs = np.array(np.argwhere(counts == np.max(counts))).flatten()
+                bestA = np.random.choice(bestAs)
+            else:
+                valids = self.game.getValidMoves(canonicalBoard, self.player)
+                bestA = np.argmax(self.nnet.predict(canonicalBoard * self.player)[0] * valids)
             probs = [0] * len(counts)
             probs[bestA] = 1
+            return probs
+
+        if sum(counts) == 0:
+            valids = self.game.getValidMoves(canonicalBoard, self.player)
+            probs = self.nnet.predict(canonicalBoard * self.player)[0] * valids
+            prob_sum = np.sum(probs)
+            probs /= prob_sum
             return probs
 
         counts = [x ** (1. / temp) for x in counts]
@@ -52,7 +73,7 @@ class MCTS():
         probs = [x / counts_sum for x in counts]
         return probs
 
-    def search(self, canonicalBoard):
+    def search(self, board, player, prev_player):
         """
         This function performs one iteration of MCTS. It is recursively called
         till a leaf node is found. The action chosen at each node is one that
@@ -71,6 +92,8 @@ class MCTS():
         Returns:
             v: the negative of the value of the current canonicalBoard
         """
+        canonicalBoard = self.game.getCanonicalForm(board, player) * player
+        multiplier = player * prev_player  # -1 if different, 1 if same
 
         s = self.game.stringRepresentation(canonicalBoard)
 
@@ -78,7 +101,7 @@ class MCTS():
             self.Es[s] = self.game.getGameEnded(canonicalBoard, 1)
         if self.Es[s] != 0:
             # terminal node
-            return -self.Es[s]
+            return self.Es[s] * multiplier
 
         if s not in self.Ps:
             # leaf node
@@ -92,14 +115,14 @@ class MCTS():
                 # if all valid moves were masked make all valid moves equally probable
 
                 # NB! All valid moves may be masked if either your NNet architecture is insufficient or you've get overfitting or something else.
-                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.   
+                # If you have got dozens or hundreds of these messages you should pay attention to your NNet and/or training process.
                 log.error("All valid moves were masked, doing a workaround.")
                 self.Ps[s] = self.Ps[s] + valids
                 self.Ps[s] /= np.sum(self.Ps[s])
 
             self.Vs[s] = valids
             self.Ns[s] = 0
-            return -v
+            return v * multiplier
 
         valids = self.Vs[s]
         cur_best = -float('inf')
@@ -119,10 +142,9 @@ class MCTS():
                     best_act = a
 
         a = best_act
-        next_s, next_player = self.game.getNextState(canonicalBoard, 1, a)
-        next_s = self.game.getCanonicalForm(next_s, next_player)
+        next_s, next_player = self.game.getNextState(board, player, a)
 
-        v = self.search(next_s)
+        v = self.search(next_s, next_player, player)
 
         if (s, a) in self.Qsa:
             self.Qsa[(s, a)] = (self.Nsa[(s, a)] * self.Qsa[(s, a)] + v) / (self.Nsa[(s, a)] + 1)
@@ -133,4 +155,4 @@ class MCTS():
             self.Nsa[(s, a)] = 1
 
         self.Ns[s] += 1
-        return -v
+        return v * multiplier

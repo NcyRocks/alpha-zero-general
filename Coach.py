@@ -10,7 +10,6 @@ from tqdm import tqdm
 
 from Arena import Arena
 from MCTS import MCTS
-from Imp_MCTS import Imp_MCTS
 from tictactoe.TicTacToePlayers import NaiveNNetPlayer
 
 log = logging.getLogger(__name__)
@@ -28,7 +27,7 @@ class Coach():
         self.pnet = self.nnet.__class__(self.game)  # the competitor network
         self.args = args
         self.useMCTS = useMCTS
-        self.mcts = {1: Imp_MCTS(self.game, self.nnet, 1, self.args), -1: Imp_MCTS(self.game, self.nnet, -1, self.args)}
+        self.mcts = {1: MCTS(self.game, self.nnet, 1, self.args), -1: MCTS(self.game, self.nnet, -1, self.args)}
         self.trainExamplesHistory = []  # history of examples from args.numItersForTrainExamplesHistory latest iterations
         self.skipFirstSelfPlay = False  # can be overriden in loadTrainExamples()
 
@@ -92,7 +91,7 @@ class Coach():
                 iterationTrainExamples = deque([], maxlen=self.args.maxlenOfQueue)
 
                 for _ in tqdm(range(self.args.numEps), desc="Self Play"):
-                    self.mcts = {1: Imp_MCTS(self.game, self.nnet, 1, self.args), -1: Imp_MCTS(self.game, self.nnet, -1, self.args)}  # reset search tree
+                    self.mcts = {1: MCTS(self.game, self.nnet, 1, self.args), -1: MCTS(self.game, self.nnet, -1, self.args)}  # reset search tree
                     iterationTrainExamples += self.executeEpisode()
 
                 # save the iteration examples to the history 
@@ -120,13 +119,12 @@ class Coach():
             log.info('PITTING AGAINST PREVIOUS VERSION')
 
             if self.useMCTS:
-                pmcts = Imp_MCTS(self.game, self.pnet, 1, self.args)
+                pmcts = MCTS(self.game, self.pnet, 1, self.args)
 
-                nmcts = Imp_MCTS(self.game, self.nnet, -1, self.args)
+                nmcts = MCTS(self.game, self.nnet, -1, self.args)
 
                 arena = Arena(pmcts, nmcts, self.game, self.game.display)
             else:
-                # TODO: Really hacky solution, need to change to other games manually
                 arena = Arena(NaiveNNetPlayer(self.game, self.pnet, 1),
                             NaiveNNetPlayer(self.game, self.nnet, -1), self.game, self.game.display)
 
